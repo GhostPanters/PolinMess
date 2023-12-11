@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Messenger</title>
+</head>
+<body>
+    <ul id="messages"></ul>
+    <input id="message_input" autocomplete="off" /><button onclick="sendMessage()">Send</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // При подключении запросим все сохраненные сообщения
+        socket.on('connect', function() {
+            socket.emit('request_all_messages');
+        });
+
+        socket.on('all_messages', function(messages){
+            var ul = document.getElementById('messages');
+            ul.innerHTML = ''; // Очистим сообщения
+
+            messages.forEach(function(data) {
+                var li = document.createElement('li');
+                li.appendChild(document.createTextNode(data.username + ': ' + data.message));
+                ul.appendChild(li);
+            });
+        });
+
+        socket.on('message', function(data){
+            var ul = document.getElementById('messages');
+            var li = document.createElement('li');
+            li.appendChild(document.createTextNode(data.username + ': ' + data.message));
+            ul.appendChild(li);
+        });
+
+        function sendMessage(){
+            var messageInput = document.getElementById('message_input');
+            var message = messageInput.value;
+            socket.emit('message', {'username': 'Console', 'message': message});
+            messageInput.value = '';
+        }
+    </script>
+</body>
+</html>
